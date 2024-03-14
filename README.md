@@ -1,7 +1,20 @@
-# ui-data-form
-Website for Cases form
+# ui-registro-femicidios
 
-## Proposed tools
-- React on Vite with TS
-- React on Vite with JS
-- Astro
+Internal website for the femicide registry system we use at the Observatorio de las Violencias de Género “Ahora Que Sí Nos Ven”
+
+This is a [ReactJS](https://react.dev/) project built using [Vite](https://vitejs.dev/).
+
+## Development
+
+### Prerequisites
+
+We use a dockerized development environment, so you will need [docker](https://www.docker.com/) on your machine. No other dependencies are required in your machine.
+
+### Quick start
+
+* Run `docker compose up`. This will take a bit the first time since the docker images need to be built or downloaded. Once done, the website can be accessed at http://localhost:5173.
+*
+* ## License
+*
+* See the [LICENSE](./LICENSE) file for license rights and limitations (MIT).
+*
