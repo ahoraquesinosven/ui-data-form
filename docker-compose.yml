@@ -1,0 +1,16 @@
+version: "3"
+services:
+  website:
+    image: "observatorio/ui-registro-femicidios"
+    container_name: "website"
+    build: .
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src:/app/src/
+      - ./public:/app/public/
+      - ./.eslintrc.cjs:/app/.eslintrc.cjs
+      - ./vite.config.ts:/app/vite.config.ts
