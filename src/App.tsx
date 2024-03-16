@@ -1,49 +1,5 @@
+import {useState, useEffect} from 'react';
 import { DateTime } from 'luxon';
-
-function getCasesFromServer() {
-  return [
-    {
-      id: 1,
-      categoria: "femicidio",
-      nombre_victima: "Agustina",
-      nombre_agresor: "Leandro",
-      ubicacion: "Santa Fe",
-      fecha: "2023-04-23T15:00:00.000Z"
-    },
-    {
-      id: 2,
-      categoria: "intento_femicidio",
-      nombre_victima: "Nicole",
-      nombre_agresor: "Jeremias",
-      ubicacion: "Formosa",
-      fecha: "2022-11-11T16:23:45.000Z"
-    },
-    {
-      id: 3,
-      categoria: "investiga_femicidio",
-      nombre_victima: "Victoria",
-      nombre_agresor: "Nicolas",
-      ubicacion: "Tierra del fuego",
-      fecha: "2020-09-23T23:30:30.000Z"
-    },
-    {
-      id: 4,
-      categoria: "transfemicidio",
-      nombre_victima: "Naiara",
-      nombre_agresor: "Jose Luis",
-      ubicacion: "Mendoza",
-      fecha: "2024-01-23T23:30:30.000Z"
-    },
-    {
-      id: 5,
-      categoria: "intento_femicidio_vinculado",
-      nombre_victima: "Camila",
-      nombre_agresor: "Jorge",
-      ubicacion: "Buenos Aires",
-      fecha: "2017-06-11T23:30:30.000Z"
-    },
-  ]
-}
 
 const categoriaMapToDisplay = {
   femicidio:                     "Femicidio",
@@ -56,6 +12,11 @@ const categoriaMapToDisplay = {
   investiga_transfemicidio:      "Se Investiga - Transfemicidio",
 };
 
+const fetchCases = () => {
+    return fetch("http://localhost:8080/v1/cases")
+      .then((response) => response.json())
+};
+
 const Nav = () => {
   return (
     <nav className="navbar bg-body-tertiary navbar-expand-lg" data-bs-theme="dark">
@@ -66,7 +27,7 @@ const Nav = () => {
   );
 }
 
-const Table = ()=>{
+const Table = ({elements})=>{
   return (
       <div className="container-fluid">
         <table className="table">
@@ -80,7 +41,7 @@ const Table = ()=>{
             </tr>
           </thead>
           <tbody>
-            {getCasesFromServer().map((el)=>(
+            {elements.map((el)=>(
               <tr key={el.id}>
               <td>{categoriaMapToDisplay[el.categoria]}</td>
               <td>{el.nombre_victima}</td>
@@ -96,10 +57,14 @@ const Table = ()=>{
 }
 
 function App() {
+  const [ data, setData ] = useState([]);
+  useEffect(() => {
+    fetchCases().then((data) => setData(data));
+  });
   return (
     <>
       <Nav />
-      <Table />
+      <Table elements={data} />
     </>
   )
 }
