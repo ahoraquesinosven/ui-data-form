@@ -1,8 +1,10 @@
+import { DateTime } from 'luxon';
+
 function getCasesFromServer() {
   return [
     {
       id: 1,
-      categoria: "Femicidio",
+      categoria: "femicidio",
       nombre_victima: "Agustina",
       nombre_agresor: "Leandro",
       ubicacion: "Santa Fe",
@@ -10,7 +12,7 @@ function getCasesFromServer() {
     },
     {
       id: 2,
-      categoria: "Intento de femicidio",
+      categoria: "intento_femicidio",
       nombre_victima: "Nicole",
       nombre_agresor: "Jeremias",
       ubicacion: "Formosa",
@@ -18,7 +20,7 @@ function getCasesFromServer() {
     },
     {
       id: 3,
-      categoria: "Se investiga - Femicidio",
+      categoria: "investiga_femicidio",
       nombre_victima: "Victoria",
       nombre_agresor: "Nicolas",
       ubicacion: "Tierra del fuego",
@@ -26,7 +28,7 @@ function getCasesFromServer() {
     },
     {
       id: 4,
-      categoria: "Transfemicidio",
+      categoria: "transfemicidio",
       nombre_victima: "Naiara",
       nombre_agresor: "Jose Luis",
       ubicacion: "Mendoza",
@@ -34,7 +36,7 @@ function getCasesFromServer() {
     },
     {
       id: 5,
-      categoria: "Intento de Femicidio Vinculado",
+      categoria: "intento_femicidio_vinculado",
       nombre_victima: "Camila",
       nombre_agresor: "Jorge",
       ubicacion: "Buenos Aires",
@@ -43,6 +45,16 @@ function getCasesFromServer() {
   ]
 }
 
+const categoriaMapToDisplay = {
+  femicidio:                     "Femicidio",
+  intento_femicidio:             "Intento de Femicidio",
+  transfemicidio:                "Transfemicidio",
+  femicidio_vinculado:           "Femicidio Vinculado",
+  intento_femicidio_vinculado:   "Intento de Femicidio Vinculado",
+  investiga_femicidio:           "Se Investiga - Femicidio",
+  investiga_femicidio_vinculado: "Se Investiga - Femicidio Vinculado",
+  investiga_transfemicidio:      "Se Investiga - Transfemicidio",
+};
 
 
 function App() {
@@ -67,11 +79,11 @@ function App() {
           <tbody>
             {getCasesFromServer().map((el)=>(
               <tr key={el.id}>
-              <td>{el.categoria}</td>
+              <td>{categoriaMapToDisplay[el.categoria]}</td>
               <td>{el.nombre_victima}</td>
               <td>{el.nombre_agresor}</td>
               <td>{el.ubicacion}</td>
-              <td>{el.fecha}</td>
+              <td>{DateTime.fromISO(el.fecha).setLocale("es").toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
