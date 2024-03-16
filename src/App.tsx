@@ -56,15 +56,18 @@ const categoriaMapToDisplay = {
   investiga_transfemicidio:      "Se Investiga - Transfemicidio",
 };
 
-
-function App() {
+const Nav = () => {
   return (
-    <>
-      <nav className="navbar bg-body-tertiary navbar-expand-lg" data-bs-theme="dark">
-        <div className="container-fluid">
-          <a className="navbar-brand" href="#">Registro de Femicidios</a>
-        </div>
-      </nav>
+    <nav className="navbar bg-body-tertiary navbar-expand-lg" data-bs-theme="dark">
+      <div className="container-fluid">
+        <a className="navbar-brand" href="#">Registro de Femicidios</a>
+      </div>
+    </nav>
+  );
+}
+
+const Table = ()=>{
+  return (
       <div className="container-fluid">
         <table className="table">
           <thead>
@@ -89,6 +92,14 @@ function App() {
           </tbody>
         </table>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Nav />
+      <Table />
     </>
   )
 }
