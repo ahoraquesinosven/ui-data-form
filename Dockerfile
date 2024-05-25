@@ -13,8 +13,8 @@ RUN npm install
 
 
 # Setup the rest of the application
-COPY index.html ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
-COPY src ./src
 COPY public ./public
+COPY index.html ./
+COPY src ./src
