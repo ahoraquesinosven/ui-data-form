@@ -2,18 +2,7 @@ import {createContext, useContext, useEffect} from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import localforage from "localforage";
 import {generatePKCEPair, buildAuthorizationUrl, exchangeAuthorizationCode} from '@/api/aqsnv/auth.ts';
-
-export class AccessToken {
-  accessToken?: string;
-
-  isAvailable(): boolean {
-    return !!this.accessToken;
-  }
-
-  asAuthorizationHeader(): string {
-    return `Bearer ${this.accessToken}`
-  }
-}
+import { AccessToken } from "@/types/auth";
 
 export const AccessTokenContext = createContext(new AccessToken());
 
@@ -56,7 +45,8 @@ export function AuthorizationCallback() : React.ReactNode {
       const state = searchParams.get("state") || "/";
 
       const pkceVerifier = await localforage.getItem<string>("pkce") || "";
-      accessToken.accessToken = await exchangeAuthorizationCode(code, pkceVerifier);
+      const response = await exchangeAuthorizationCode(code, pkceVerifier);
+      accessToken.accessToken = response.access_token;
 
       navigate(state);
     })();

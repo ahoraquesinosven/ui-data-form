@@ -7,15 +7,14 @@ const UserPic = () => {
   const token = useAccessToken();
   const {data} = useQuery({
     queryKey: ["me"],
-    queryFn: () => getCurrentUser(token.accessToken!),
+    queryFn: () => getCurrentUser(token),
   });
 
 
   if (data) {
     return (
-      <div className="navbar-nav dflex align-items-center">
+      <div className="navbar-nav dflex">
         <img src={data.pictureUrl} style={{width: "2em", height: "2em", borderRadius: "50%"}} className='me-1' />
-        <span className="navbar-text">{data.name}</span>
       </div>
     );
   } else {
@@ -27,7 +26,7 @@ const UserPic = () => {
 
 const Nav = () => {
   return (
-    <nav className="navbar bg-body-tertiary navbar-expand-lg" data-bs-theme="dark">
+    <nav className="navbar bg-primary navbar-expand-lg" data-bs-theme="dark">
       <div className="container-fluid">
         <a className="navbar-brand" href="#">Registro de Femicidios</a>
         <UserPic />
