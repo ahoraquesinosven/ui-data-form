@@ -6,6 +6,8 @@ services:
     command: npm run dev
     environment:
       - NODE_ENV=development
+      - VITE_API_AQSNV_SERVER=http://localhost:8080
+      - VITE_API_AQSNV_CLIENT_ID=1234
     ports:
       - "5173:5173"
     volumes:
