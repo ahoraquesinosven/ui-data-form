@@ -1,44 +1,63 @@
 import {useQuery, useMutation, useQueryClient} from 'react-query';
+import {UserAvatar} from '@/components/UserAvatar';
 import {useAccessToken} from '@/hooks/auth';
 import {fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
 
-export function FeedItem({item}) {
+function useAssignFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
-  const assignmentMutation = useMutation({
+  return useMutation({
     mutationFn: (feedItemId: string) => assignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["feed"]);
-    },
+    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
   });
-  const unassignmentMutation = useMutation({
-    mutationFn: (feedItemId: string) => unassignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["feed"]);
-    },
-  });
-  const completionMutation = useMutation({
-    mutationFn: (feedItemId: string) => completeFeedItem(accessToken, feedItemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["feed"]);
-    },
-  });
-  const uncompletionMutation = useMutation({
-    mutationFn: (feedItemId: string) => uncompleteFeedItem(accessToken, feedItemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["feed"]);
-    },
-  });
+}
 
+function useUnassignFeedItemMutation() {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (feedItemId: string) => unassignFeedItem(accessToken, feedItemId),
+    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+  });
+}
+
+function useCompleteFeedItemMutation() {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (feedItemId: string) => completeFeedItem(accessToken, feedItemId),
+    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+  });
+}
+
+function useUncompleteFeedItemMutation() {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (feedItemId: string) => uncompleteFeedItem(accessToken, feedItemId),
+    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+  });
+}
+
+function useFeedQuery(state) {
+  const accessToken = useAccessToken();
+  return useQuery({
+    queryKey: ["feed", state],
+    queryFn: () => fetchFeedItems(accessToken, state),
+  });
+}
+
+export function FeedItem({item}) {
+  const assignMutation = useAssignFeedItemMutation();
+  const unassignMutation = useUnassignFeedItemMutation();
+  const completeMutation = useCompleteFeedItemMutation();
+  const uncompleteMutation = useUncompleteFeedItemMutation();
 
   return (
     <div className="card mb-2">
       {item.assignedUser && (
         <div className="card-header">
-          <img src={item.assignedUser.pictureUrl} style={{width: "1.5em", height: "1.5em", borderRadius: "50%"}} />
-          <span className="ms-2">
-            {item.assignedUser.name}
-          </span>
+          <UserAvatar user={item.assignedUser} showName />
         </div>
       )}
       <div className="card-body">
@@ -55,7 +74,7 @@ export function FeedItem({item}) {
             href={item.link}
             target='_blank'
             onClick={() => {
-              assignmentMutation.mutate(item.id);
+              assignMutation.mutate(item.id);
             }}>
             <i className='bi bi-binoculars'></i>
           </a>
@@ -66,7 +85,7 @@ export function FeedItem({item}) {
               className='card-link btn btn-danger'
               title="Cancelar revisión"
               onClick={() => {
-                unassignmentMutation.mutate(item.id)
+                unassignMutation.mutate(item.id)
               }}>
               <i className="bi bi-x-circle-fill"></i>
             </button>
@@ -74,7 +93,7 @@ export function FeedItem({item}) {
               className='card-link btn btn-success'
               title="Revisado"
               onClick={() => {
-                completionMutation.mutate(item.id)
+                completeMutation.mutate(item.id)
               }}>
               <i className="bi bi-check-circle-fill"></i>
             </button>
@@ -85,7 +104,7 @@ export function FeedItem({item}) {
             className='card-link btn btn-danger'
             title='Volver a revisar'
             onClick={() => {
-              uncompletionMutation.mutate(item.id)
+              uncompleteMutation.mutate(item.id)
             }}>
             <i className="bi bi-x-circle-fill"></i>
           </button>
@@ -110,26 +129,15 @@ export function FeedList({name, data}) {
       </h2>
       {data.page.map((item) => (
         <FeedItem key={item.id} item={item} />
-      ))
-      }
+      ))}
     </div>
   )
 }
 
 export function Feed() {
-  const token = useAccessToken();
-  const backlogQuery = useQuery({
-    queryKey: ["feed", "backlog"],
-    queryFn: () => fetchFeedItems(token, "backlog"),
-  });
-  const inProgressQuery = useQuery({
-    queryKey: ["feed", "inProgress"],
-    queryFn: () => fetchFeedItems(token, "inProgress"),
-  });
-  const doneQuery = useQuery({
-    queryKey: ["feed", "done"],
-    queryFn: () => fetchFeedItems(token, "done"),
-  });
+  const backlogQuery = useFeedQuery("backlog");
+  const inProgressQuery = useFeedQuery("inProgress");
+  const doneQuery = useFeedQuery("done");
 
   return (
     <>

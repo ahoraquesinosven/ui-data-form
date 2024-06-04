@@ -1,5 +1,6 @@
 import {Outlet} from 'react-router-dom';
 import {useQuery} from 'react-query';
+import { UserAvatar } from '@/components/UserAvatar';
 import {useAccessToken, RequiresAuthorization} from '@/hooks/auth';
 import {fetchCurrentUser} from '@/api/aqsnv/profiles';
 
@@ -14,7 +15,7 @@ const UserPic = () => {
   if (data) {
     return (
       <div className="navbar-nav dflex">
-        <img src={data.pictureUrl} style={{width: "2em", height: "2em", borderRadius: "50%"}} className='me-1' />
+        <UserAvatar user={data} />
       </div>
     );
   } else {
