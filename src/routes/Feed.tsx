@@ -1,6 +1,6 @@
 import {useQuery, useMutation, useQueryClient} from 'react-query';
 import {useAccessToken} from '@/hooks/auth';
-import {getFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/auth';
+import {fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
 
 export function FeedItem({item}) {
   const accessToken = useAccessToken();
@@ -120,15 +120,15 @@ export function Feed() {
   const token = useAccessToken();
   const backlogQuery = useQuery({
     queryKey: ["feed", "backlog"],
-    queryFn: () => getFeedItems(token, "backlog"),
+    queryFn: () => fetchFeedItems(token, "backlog"),
   });
   const inProgressQuery = useQuery({
     queryKey: ["feed", "inProgress"],
-    queryFn: () => getFeedItems(token, "inProgress"),
+    queryFn: () => fetchFeedItems(token, "inProgress"),
   });
   const doneQuery = useQuery({
     queryKey: ["feed", "done"],
-    queryFn: () => getFeedItems(token, "done"),
+    queryFn: () => fetchFeedItems(token, "done"),
   });
 
   return (

@@ -1,13 +1,13 @@
 import {Outlet} from 'react-router-dom';
 import {useQuery} from 'react-query';
-import {useAccessToken} from './hooks/auth';
-import {getCurrentUser} from './api/aqsnv/auth';
+import {useAccessToken, RequiresAuthorization} from '@/hooks/auth';
+import {fetchCurrentUser} from '@/api/aqsnv/profiles';
 
 const UserPic = () => {
   const token = useAccessToken();
   const {data} = useQuery({
     queryKey: ["me"],
-    queryFn: () => getCurrentUser(token),
+    queryFn: () => fetchCurrentUser(token),
   });
 
 
@@ -35,14 +35,12 @@ const Nav = () => {
   );
 }
 
-const Layout = () => {
+export const Layout = () => {
   return (
-    <>
+    <RequiresAuthorization>
       <Nav />
       <Outlet />
-    </>
+    </RequiresAuthorization>
   );
 };
-
-export default Layout;
 
