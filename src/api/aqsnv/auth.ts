@@ -80,6 +80,7 @@ export type Feed = {
 export async function getFeedItems(token: AccessToken, status: "backlog" | "inProgress" | "done") {
   const url = new URL(endpoints.feedItems());
   url.searchParams.append("status", status);
+  url.searchParams.append("limit", "5");
   const response = await httpRequest(url, {
     headers: {
       "Authorization": token.asAuthorizationHeader(),
@@ -87,17 +88,6 @@ export async function getFeedItems(token: AccessToken, status: "backlog" | "inPr
   });
 
   return response.json();
-}
-
-
-export async function getFeed(token: AccessToken): Promise<Feed> {
-  const [backlog, inProgress, done] = await Promise.all([
-    getFeedItems(token, "backlog"),
-    getFeedItems(token, "inProgress"),
-    getFeedItems(token, "done"),
-  ]);
-
-  return {backlog, inProgress, done};
 }
 
 export async function assignFeedItem(token: AccessToken, feedItemId: string): Promise<void> {

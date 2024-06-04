@@ -1,6 +1,6 @@
 import {useQuery, useMutation, useQueryClient} from 'react-query';
 import {useAccessToken} from '@/hooks/auth';
-import {getFeed, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/auth';
+import {getFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/auth';
 
 export function FeedItem({item}) {
   const accessToken = useAccessToken();
@@ -46,7 +46,7 @@ export function FeedItem({item}) {
           {item.title}
         </h3>
         <h4 className="card-subtitle h6 text-body-secondary mb-2">
-          {item.feed.name}
+          {new Intl.DateTimeFormat('es').format(new Date(item.publishedAt))} - {item.feed.name}
         </h4>
         {!item.assignedUser && (
           <a
@@ -98,13 +98,17 @@ export function FeedItem({item}) {
   )
 }
 
-export function FeedList({name, items}) {
+export function FeedList({name, data}) {
+  if (!data) {
+    return;
+  }
+
   return (
     <div className="col">
       <h2 className='h4'>
-        {name} <span className="badge text-bg-danger rounded-pill">{items.length}</span>
+        {name} <span className="badge text-bg-danger rounded-pill">{data.total}</span>
       </h2>
-      {items.map((item) => (
+      {data.page.map((item) => (
         <FeedItem key={item.id} item={item} />
       ))
       }
@@ -114,22 +118,26 @@ export function FeedList({name, items}) {
 
 export function Feed() {
   const token = useAccessToken();
-  const {data, isLoading} = useQuery({
-    queryKey: ["feed"],
-    queryFn: () => getFeed(token),
+  const backlogQuery = useQuery({
+    queryKey: ["feed", "backlog"],
+    queryFn: () => getFeedItems(token, "backlog"),
   });
-
-  if (isLoading) {
-    return;
-  }
+  const inProgressQuery = useQuery({
+    queryKey: ["feed", "inProgress"],
+    queryFn: () => getFeedItems(token, "inProgress"),
+  });
+  const doneQuery = useQuery({
+    queryKey: ["feed", "done"],
+    queryFn: () => getFeedItems(token, "done"),
+  });
 
   return (
     <>
       <div className="container-fluid mt-3">
         <div className="row row-cols-1 row-cols-md-3">
-          <FeedList name="Pendientes" items={data?.backlog} />
-          <FeedList name="En revisión" items={data?.inProgress} />
-          <FeedList name="Revisadas" items={data?.done} />
+          <FeedList name="Pendientes" data={backlogQuery.data} />
+          <FeedList name="En revisión" data={inProgressQuery.data} />
+          <FeedList name="Revisadas" data={doneQuery.data} />
         </div>
       </div>
     </>
