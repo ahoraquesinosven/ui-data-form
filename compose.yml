@@ -1,8 +1,9 @@
 services:
   website:
     image: "observatorio/ui-registro-femicidios"
-    container_name: "website"
-    build: .
+    build:
+      context: .
+      target: development
     command: npm run dev
     environment:
       - NODE_ENV=development

@@ -1,0 +1,27 @@
+substitutions:
+  _SERVICE_NAME: ui-registro
+
+steps:
+  # Build the production docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$SHORT_SHA',
+      '--build-arg', "API_AQSNV_SERVER=${_API_AQSNV_SERVER}",
+      '--build-arg', "API_AQSNV_CLIENT_ID=${_API_AQSNV_CLIENT_ID}",
+      '.'
+    ]
+
+  # Push the docker image to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$SHORT_SHA' ]
+
+  # Deploy to cloud run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'run', 'deploy', '${_SERVICE_NAME}',
+      '--region', 'us-central1',
+      '--image', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$SHORT_SHA',
+      '--port', "80",
+      '--allow-unauthenticated',
+    ]
