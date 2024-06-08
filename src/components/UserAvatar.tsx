@@ -1,0 +1,25 @@
+export type UserAvatarProps = {
+  user: {
+    pictureUrl: string,
+    name: string,
+  },
+  showName: boolean | null,
+}
+
+export function UserAvatar({user, showName}: UserAvatarProps) {
+  return (
+    <>
+    <img 
+      src={user.pictureUrl}
+      style={{
+        width: "2em",
+        height: "2em",
+        borderRadius: "50%",
+      }}
+    />
+      { showName && (
+        <span className="ms-2">{user.name}</span>
+      )}
+    </>
+  )
+}

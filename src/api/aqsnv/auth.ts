@@ -1,13 +1,10 @@
 import config from "@/config/config";
 import {httpRequest} from "@/utils/http";
 
-const endpointBuilder = (path: string) => () => new URL(path, config.api.aqsnv.server);
-
 const endpoints = {
-  pkce: endpointBuilder('/auth/pkce'),
-  authorize: endpointBuilder('/auth/authorize'),
-  token: endpointBuilder('auth/token'),
-  me: endpointBuilder('/auth/me'),
+  pkce: () => new URL('/auth/pkce', config.api.aqsnv.server),
+  authorize: () => new URL('/auth/authorize', config.api.aqsnv.server),
+  token: () => new URL('auth/token', config.api.aqsnv.server),
 };
 
 export type PKCEPair = {
@@ -32,9 +29,13 @@ export async function buildAuthorizationUrl(state: string, pkcePair: PKCEPair): 
   return result;
 }
 
-export type AccessToken = string;
+export type AccessTokenResponse = {
+  access_token: string,
+  token_type: string,
+  expires_in: number,
+};
 
-export async function exchangeAuthorizationCode(authorizationCode: string, verifier: string): Promise<AccessToken> {
+export async function exchangeAuthorizationCode(authorizationCode: string, verifier: string): Promise<AccessTokenResponse> {
   const requestData = new URLSearchParams();
   requestData.append("code", authorizationCode);
   requestData.append("client_id", config.api.aqsnv.clientId);
@@ -45,20 +46,5 @@ export async function exchangeAuthorizationCode(authorizationCode: string, verif
     body: requestData,
     method: "POST",
   });
-  return response.text();
-}
-
-export type User = {
-  name: string,
-  pictureUrl: string,
-};
-
-export async function getCurrentUser(token: string): Promise<User> {
-  const response = await httpRequest(endpoints.me(), {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-    }
-  });
-
   return response.json();
 }

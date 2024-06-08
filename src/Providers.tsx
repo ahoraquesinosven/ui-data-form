@@ -1,6 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import {AccessTokenProvider, AccessToken} from './hooks/auth.ts';
+import {AccessTokenProvider} from './hooks/auth.ts';
+import { AccessToken } from "./types/auth.ts";
 
 type ProvidersProps = {
   children: React.ReactNode,
