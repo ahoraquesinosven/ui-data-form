@@ -4,35 +4,39 @@ import {AccessToken} from "@/types/auth";
 
 const endpoints = {
   feedItems: () => new URL("/v1/feed/items", config.api.aqsnv.server),
-  feedItemAssignment: (feedItemId: string) => new URL(`/v1/feed/items/${feedItemId}/assignment`, config.api.aqsnv.server),
-  feedItemCompletion: (feedItemId: string) => new URL(`/v1/feed/items/${feedItemId}/completion`, config.api.aqsnv.server),
+  feedItemAssignment: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/assignment`, config.api.aqsnv.server),
+  feedItemCompletion: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/completion`, config.api.aqsnv.server),
+};
+
+export type FeedItem = {
+  id: number,
+  feed: {
+    id: string,
+    name: string,
+    updatedAt: string,
+  },
+  publishedAt: string,
+  title: string,
+  link: string,
+  isDone: boolean,
+  assignedUser?: {
+    name: string,
+    email: string,
+    pictureUrl: string,
+  },
 };
 
 export type FeedItemPages = {
   limit: number,
   total: number,
-  page: [{
-    id: number,
-    feed: {
-      id: string,
-      name: string,
-      updatedAt: string,
-    },
-    publishedAt: string,
-    title: string,
-    link: string,
-    isdone: boolean,
-    assignedUser?: {
-      name: string,
-      email: string,
-      pictureUrl: string,
-    },
-  }],
+  page: [FeedItem],
 };
 
-export async function fetchFeedItems(token: AccessToken, status: "backlog" | "inProgress" | "done") : Promise<FeedItemPages> {
+export type FeedItemState = "backlog" | "inProgress" | "done";
+
+export async function fetchFeedItems(token: AccessToken, state: FeedItemState): Promise<FeedItemPages> {
   const url = new URL(endpoints.feedItems());
-  url.searchParams.append("status", status);
+  url.searchParams.append("status", state);
   url.searchParams.append("limit", "5");
   const response = await httpRequest(url, {
     headers: {
@@ -43,7 +47,7 @@ export async function fetchFeedItems(token: AccessToken, status: "backlog" | "in
   return response.json();
 }
 
-export async function assignFeedItem(token: AccessToken, feedItemId: string): Promise<void> {
+export async function assignFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
   await httpRequest(endpoints.feedItemAssignment(feedItemId), {
     method: 'post',
     headers: {
@@ -54,7 +58,7 @@ export async function assignFeedItem(token: AccessToken, feedItemId: string): Pr
   return;
 }
 
-export async function unassignFeedItem(token: AccessToken, feedItemId: string): Promise<void> {
+export async function unassignFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
   await httpRequest(endpoints.feedItemAssignment(feedItemId), {
     method: 'delete',
     headers: {
@@ -65,7 +69,7 @@ export async function unassignFeedItem(token: AccessToken, feedItemId: string): 
   return;
 }
 
-export async function completeFeedItem(token: AccessToken, feedItemId: string): Promise<void> {
+export async function completeFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
   await httpRequest(endpoints.feedItemCompletion(feedItemId), {
     method: 'post',
     headers: {
@@ -76,7 +80,7 @@ export async function completeFeedItem(token: AccessToken, feedItemId: string): 
   return;
 }
 
-export async function uncompleteFeedItem(token: AccessToken, feedItemId: string): Promise<void> {
+export async function uncompleteFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
   await httpRequest(endpoints.feedItemCompletion(feedItemId), {
     method: 'delete',
     headers: {

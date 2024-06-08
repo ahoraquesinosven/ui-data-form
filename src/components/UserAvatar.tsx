@@ -1,4 +1,12 @@
-export function UserAvatar({user, showName}) {
+export type UserAvatarProps = {
+  user: {
+    pictureUrl: string,
+    name: string,
+  },
+  showName: boolean | null,
+}
+
+export function UserAvatar({user, showName}: UserAvatarProps) {
   return (
     <>
     <img 

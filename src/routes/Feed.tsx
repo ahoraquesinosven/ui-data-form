@@ -1,13 +1,13 @@
 import {useQuery, useMutation, useQueryClient} from 'react-query';
 import {UserAvatar} from '@/components/UserAvatar';
 import {useAccessToken} from '@/hooks/auth';
-import {fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
+import {FeedItem, FeedItemState, FeedItemPages, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
 
 function useAssignFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (feedItemId: string) => assignFeedItem(accessToken, feedItemId),
+    mutationFn: (feedItemId: number) => assignFeedItem(accessToken, feedItemId),
     onSuccess: () => {queryClient.invalidateQueries(["feed"])},
   });
 }
@@ -16,7 +16,7 @@ function useUnassignFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (feedItemId: string) => unassignFeedItem(accessToken, feedItemId),
+    mutationFn: (feedItemId: number) => unassignFeedItem(accessToken, feedItemId),
     onSuccess: () => {queryClient.invalidateQueries(["feed"])},
   });
 }
@@ -25,7 +25,7 @@ function useCompleteFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (feedItemId: string) => completeFeedItem(accessToken, feedItemId),
+    mutationFn: (feedItemId: number) => completeFeedItem(accessToken, feedItemId),
     onSuccess: () => {queryClient.invalidateQueries(["feed"])},
   });
 }
@@ -34,12 +34,12 @@ function useUncompleteFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (feedItemId: string) => uncompleteFeedItem(accessToken, feedItemId),
+    mutationFn: (feedItemId: number) => uncompleteFeedItem(accessToken, feedItemId),
     onSuccess: () => {queryClient.invalidateQueries(["feed"])},
   });
 }
 
-function useFeedQuery(state) {
+function useFeedQuery(state: FeedItemState) {
   const accessToken = useAccessToken();
   return useQuery({
     queryKey: ["feed", state],
@@ -47,12 +47,73 @@ function useFeedQuery(state) {
   });
 }
 
-export function FeedItem({item}) {
+type FeedItemButtonsProps = {
+  item: FeedItem,
+}
+
+export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
   const assignMutation = useAssignFeedItemMutation();
-  const unassignMutation = useUnassignFeedItemMutation();
-  const completeMutation = useCompleteFeedItemMutation();
+
+  return (
+    <a
+      className="card-link btn btn-primary"
+      title="Revisar"
+      href={item.link}
+      target='_blank'
+      onClick={() => {
+        assignMutation.mutate(item.id);
+      }}>
+      <i className='bi bi-binoculars'></i>
+    </a>
+  );
+}
+
+export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
   const uncompleteMutation = useUncompleteFeedItemMutation();
 
+  return (
+    <button
+      className='card-link btn btn-danger'
+      title='Volver a revisar'
+      onClick={() => {
+        uncompleteMutation.mutate(item.id)
+      }}>
+      <i className="bi bi-x-circle-fill"></i>
+    </button>
+  );
+}
+
+export function InProgressFeedItemButtons({item}: FeedItemButtonsProps) {
+  const unassignMutation = useUnassignFeedItemMutation();
+  const completeMutation = useCompleteFeedItemMutation();
+
+  return (
+    <>
+      <button
+        className='card-link btn btn-danger'
+        title="Cancelar revisión"
+        onClick={() => {
+          unassignMutation.mutate(item.id)
+        }}>
+        <i className="bi bi-x-circle-fill"></i>
+      </button>
+      <button
+        className='card-link btn btn-success'
+        title="Revisado"
+        onClick={() => {
+          completeMutation.mutate(item.id)
+        }}>
+        <i className="bi bi-check-circle-fill"></i>
+      </button>
+    </>
+  );
+}
+
+type FeedItemCardProps = {
+  item: FeedItem,
+};
+
+export function FeedItemCard({item}: FeedItemCardProps) {
   return (
     <div className="card mb-2">
       {item.assignedUser && (
@@ -68,56 +129,28 @@ export function FeedItem({item}) {
           {new Intl.DateTimeFormat('es').format(new Date(item.publishedAt))} - {item.feed.name}
         </h4>
         {!item.assignedUser && (
-          <a
-            className="card-link btn btn-primary"
-            title="Revisar"
-            href={item.link}
-            target='_blank'
-            onClick={() => {
-              assignMutation.mutate(item.id);
-            }}>
-            <i className='bi bi-binoculars'></i>
-          </a>
+          <BacklogFeedItemButtons item={item} />
         )}
         {item.assignedUser && !item.isDone && (
-          <>
-            <button
-              className='card-link btn btn-danger'
-              title="Cancelar revisión"
-              onClick={() => {
-                unassignMutation.mutate(item.id)
-              }}>
-              <i className="bi bi-x-circle-fill"></i>
-            </button>
-            <button
-              className='card-link btn btn-success'
-              title="Revisado"
-              onClick={() => {
-                completeMutation.mutate(item.id)
-              }}>
-              <i className="bi bi-check-circle-fill"></i>
-            </button>
-          </>
+          <InProgressFeedItemButtons item={item} />
         )}
         {item.isDone && (
-          <button
-            className='card-link btn btn-danger'
-            title='Volver a revisar'
-            onClick={() => {
-              uncompleteMutation.mutate(item.id)
-            }}>
-            <i className="bi bi-x-circle-fill"></i>
-          </button>
+          <DoneFeedItemButtons item={item} />
         )}
         <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
           <i className='bi bi-box-arrow-up-right'></i>
         </a>
       </div>
     </div>
-  )
+  );
 }
 
-export function FeedList({name, data}) {
+type FeedListProps = {
+  name: string,
+  data?: FeedItemPages
+};
+
+export function FeedList({name, data}: FeedListProps) {
   if (!data) {
     return;
   }
@@ -127,8 +160,8 @@ export function FeedList({name, data}) {
       <h2 className='h4'>
         {name} <span className="badge text-bg-danger rounded-pill">{data.total}</span>
       </h2>
-      {data.page.map((item) => (
-        <FeedItem key={item.id} item={item} />
+      {data.page.map((item: FeedItem) => (
+        <FeedItemCard key={item.id} item={item} />
       ))}
     </div>
   )

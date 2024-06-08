@@ -9,6 +9,7 @@ export function Router() {
       <Routes>
         <Route path='/oauth/cb' element={<AuthorizationCallback />} />
         <Route path='/' element={<Layout />}>
+          <Route index element={<Feed />} />
           <Route path='/feed' element={<Feed />} />
         </Route>
       </Routes>
