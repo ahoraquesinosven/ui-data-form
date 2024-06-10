@@ -37,7 +37,7 @@ export type FeedItemState = "backlog" | "inProgress" | "done";
 export async function fetchFeedItems(token: AccessToken, state: FeedItemState): Promise<FeedItemPages> {
   const url = new URL(endpoints.feedItems());
   url.searchParams.append("status", state);
-  url.searchParams.append("limit", "5");
+  url.searchParams.append("limit", "30");
   const response = await httpRequest(url, {
     headers: {
       "Authorization": token.asAuthorizationHeader(),
