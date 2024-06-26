@@ -18,7 +18,7 @@ export function UserAvatar({user, showName}: UserAvatarProps) {
       }}
     />
       { showName && (
-        <span className="ms-2">{user.name}</span>
+        <span className="ms-2 align-middle">{user.name}</span>
       )}
     </>
   )
