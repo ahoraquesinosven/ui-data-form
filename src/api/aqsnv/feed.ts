@@ -30,14 +30,20 @@ export type FeedItemPages = {
   limit: number,
   total: number,
   page: [FeedItem],
+  next: string,
 };
 
 export type FeedItemState = "backlog" | "inProgress" | "done";
 
-export async function fetchFeedItems(token: AccessToken, state: FeedItemState): Promise<FeedItemPages> {
+export async function fetchFeedItems(token: AccessToken, state: FeedItemState, limit?: number, start?: string): Promise<FeedItemPages> {
   const url = new URL(endpoints.feedItems());
   url.searchParams.append("status", state);
-  url.searchParams.append("limit", "30");
+  if (limit) {
+    url.searchParams.append("limit", limit.toString());
+  }
+  if (start) {
+    url.searchParams.append("start", start);
+  }
   const response = await httpRequest(url, {
     headers: {
       "Authorization": token.asAuthorizationHeader(),

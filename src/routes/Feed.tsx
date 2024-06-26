@@ -1,14 +1,21 @@
-import {useQuery, useMutation, useQueryClient} from 'react-query';
+import {useInfiniteQuery, useMutation, useQueryClient} from 'react-query';
+import {useRef, useEffect, Fragment} from 'react';
 import {UserAvatar} from '@/components/UserAvatar';
+import {BlockLoader} from '@/components/Loading';
+import {MutatingButton} from '@/components/MutatingButton';
+import {Icon} from '@/components/Icon';
 import {useAccessToken} from '@/hooks/auth';
-import {FeedItem, FeedItemState, FeedItemPages, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
+import {FeedItem, FeedItemState, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
 
 function useAssignFeedItemMutation() {
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => assignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
@@ -17,7 +24,10 @@ function useUnassignFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => unassignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
@@ -26,7 +36,10 @@ function useCompleteFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => completeFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+      queryClient.invalidateQueries(["feed", "done"]);
+    },
   });
 }
 
@@ -35,15 +48,19 @@ function useUncompleteFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => uncompleteFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "done"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
 function useFeedQuery(state: FeedItemState) {
   const accessToken = useAccessToken();
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["feed", state],
-    queryFn: () => fetchFeedItems(accessToken, state),
+    queryFn: ({pageParam}) => fetchFeedItems(accessToken, state, 5, pageParam),
+    getNextPageParam: (lastPage) => lastPage.next,
   });
 }
 
@@ -57,29 +74,16 @@ export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
   return (
     <a
       className="card-link btn btn-primary"
-      title="Revisar"
       href={item.link}
       target='_blank'
       onClick={() => {
-        assignMutation.mutate(item.id);
+        if (!assignMutation.isLoading) {
+          assignMutation.mutate(item.id);
+        }
       }}>
-      <i className='bi bi-binoculars'></i>
+      <Icon icon="binoculars" />
+      Revisar
     </a>
-  );
-}
-
-export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
-  const uncompleteMutation = useUncompleteFeedItemMutation();
-
-  return (
-    <button
-      className='card-link btn btn-danger'
-      title='Volver a revisar'
-      onClick={() => {
-        uncompleteMutation.mutate(item.id)
-      }}>
-      <i className="bi bi-x-circle-fill"></i>
-    </button>
   );
 }
 
@@ -87,25 +91,39 @@ export function InProgressFeedItemButtons({item}: FeedItemButtonsProps) {
   const unassignMutation = useUnassignFeedItemMutation();
   const completeMutation = useCompleteFeedItemMutation();
 
+  const isMutating = completeMutation.isLoading || unassignMutation.isLoading;
+
   return (
     <>
-      <button
-        className='card-link btn btn-danger'
-        title="Cancelar revisión"
-        onClick={() => {
-          unassignMutation.mutate(item.id)
-        }}>
-        <i className="bi bi-x-circle-fill"></i>
-      </button>
-      <button
-        className='card-link btn btn-success'
-        title="Revisado"
-        onClick={() => {
-          completeMutation.mutate(item.id)
-        }}>
-        <i className="bi bi-check-circle-fill"></i>
-      </button>
+      <MutatingButton
+        className='btn btn-success'
+        disabled={isMutating}
+        onClick={() => {completeMutation.mutate(item.id)}}>
+        <Icon icon="check-circle-fill" />
+        Revisado
+      </MutatingButton>
+      <MutatingButton
+        className='btn btn-secondary'
+        disabled={isMutating}
+        onClick={() => {unassignMutation.mutate(item.id)}}>
+        <Icon icon="x-circle-fill" />
+        Pendiente
+      </MutatingButton>
     </>
+  );
+}
+
+export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
+  const uncompleteMutation = useUncompleteFeedItemMutation();
+
+  return (
+    <MutatingButton
+      className='btn btn-secondary'
+      disabled={uncompleteMutation.isLoading}
+      onClick={() => {uncompleteMutation.mutate(item.id)}}>
+      <Icon icon="x-circle-fill" />
+      Volver a revisar
+    </MutatingButton>
   );
 }
 
@@ -122,24 +140,26 @@ export function FeedItemCard({item}: FeedItemCardProps) {
         </div>
       )}
       <div className="card-body">
-        <h3 className="card-title h5">
+        <h3 className="card-title h5 mb-3">
           {item.title}
         </h3>
-        <h4 className="card-subtitle h6 text-body-secondary mb-2">
+        <h4 className="card-subtitle h6 text-body-secondary mb-3">
           {new Intl.DateTimeFormat('es').format(new Date(item.publishedAt))} - {item.feed.name}
         </h4>
-        {!item.assignedUser && (
-          <BacklogFeedItemButtons item={item} />
-        )}
-        {item.assignedUser && !item.isDone && (
-          <InProgressFeedItemButtons item={item} />
-        )}
-        {item.isDone && (
-          <DoneFeedItemButtons item={item} />
-        )}
-        <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
-          <i className='bi bi-box-arrow-up-right'></i>
-        </a>
+        <div className="btn-group w-100">
+          {!item.assignedUser && (
+            <BacklogFeedItemButtons item={item} />
+          )}
+          {item.assignedUser && !item.isDone && (
+            <InProgressFeedItemButtons item={item} />
+          )}
+          {item.isDone && (
+            <DoneFeedItemButtons item={item} />
+          )}
+          <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
+            <Icon icon="box-arrow-up-right" />
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -147,38 +167,69 @@ export function FeedItemCard({item}: FeedItemCardProps) {
 
 type FeedListProps = {
   name: string,
-  data?: FeedItemPages
+  status: FeedItemState,
 };
 
-export function FeedList({name, data}: FeedListProps) {
-  if (!data) {
-    return;
-  }
+export function FeedList({name, status}: FeedListProps) {
+  const query = useFeedQuery(status);
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const target = observerTarget.current;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && query.hasNextPage && !query.isFetching) {
+          query.fetchNextPage();
+        }
+      },
+      {threshold: 1},
+    );
+
+    if (target) {
+      observer.observe(target);
+    }
+
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [query, observerTarget]);
 
   return (
-    <div className="col">
-      <h2 className='h4'>
-        {name} <span className="badge text-bg-danger rounded-pill">{data.total}</span>
-      </h2>
-      {data.page.map((item: FeedItem) => (
-        <FeedItemCard key={item.id} item={item} />
-      ))}
+    <div className="col my-2" style={{ maxHeight: "100vh", }}>
+      <div className="p-1 bg-secondary-subtle rounded h-100 overflow-y-auto">
+        <h2 className='h4 my-4'>
+          {name} ({query.data?.pages[0]?.total})
+        </h2>
+        {!query.data || (query.isFetching && !query.isFetchingNextPage) ? (
+          <BlockLoader />
+        ) : (
+          query.data.pages.map((page, i) => (
+            <Fragment key={i}>
+              {page.page.map((item) => (
+                <FeedItemCard key={item.id} item={item} />
+              ))}
+            </Fragment>
+          ))
+        )}
+        {query.isFetchingNextPage && (
+          <BlockLoader />
+        )}
+        <div ref={observerTarget}></div>
+      </div>
     </div>
   )
 }
 
 export function Feed() {
-  const backlogQuery = useFeedQuery("backlog");
-  const inProgressQuery = useFeedQuery("inProgress");
-  const doneQuery = useFeedQuery("done");
-
   return (
     <>
-      <div className="container-fluid mt-3">
+      <div className="container mt-3">
         <div className="row row-cols-1 row-cols-md-3">
-          <FeedList name="Pendientes" data={backlogQuery.data} />
-          <FeedList name="En revisión" data={inProgressQuery.data} />
-          <FeedList name="Revisadas" data={doneQuery.data} />
+          <FeedList name="Pendientes" status="backlog" />
+          <FeedList name="En revisión" status="inProgress" />
+          <FeedList name="Revisadas" status="done" />
         </div>
       </div>
     </>

@@ -27,22 +27,24 @@ const UserPic = () => {
 
 const Nav = () => {
   return (
-    <nav className="navbar bg-primary navbar-expand-lg" data-bs-theme="dark">
-      <div className="container-fluid">
-        <a className="navbar-brand" href="#">Registro de Femicidios</a>
-        <ul className="navbar-nav me-auto">
-          <li className="nav-item">
-            <a
-              className='nav-link'
-              href="https://docs.google.com/forms/d/e/1FAIpQLSekOpLfYzPmzFMoPWwpfQw7VlMHBrraXwvAZyxNswl6ls2VJg/viewform"
-              target='_blank'>
-              Casos
-            </a>
-          </li>
-        </ul>
-        <UserPic />
-      </div>
-    </nav>
+    <div className="container mt-3">
+      <nav className="navbar bg-warning navbar-expand-lg rounded-4 py-3">
+        <div className="container-fluid">
+          <a className="navbar-brand" href="#">Registro de Femicidios</a>
+          <ul className="navbar-nav me-auto">
+            <li className="nav-item">
+              <a
+                className='nav-link'
+                href="https://docs.google.com/forms/d/e/1FAIpQLSekOpLfYzPmzFMoPWwpfQw7VlMHBrraXwvAZyxNswl6ls2VJg/viewform"
+                target='_blank'>
+                Casos
+              </a>
+            </li>
+          </ul>
+          <UserPic />
+        </div>
+      </nav>
+    </div>
   );
 }
 
