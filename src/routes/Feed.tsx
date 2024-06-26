@@ -8,7 +8,10 @@ function useAssignFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => assignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
@@ -17,7 +20,10 @@ function useUnassignFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => unassignFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
@@ -26,7 +32,10 @@ function useCompleteFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => completeFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+      queryClient.invalidateQueries(["feed", "done"]);
+    },
   });
 }
 
@@ -35,7 +44,10 @@ function useUncompleteFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => uncompleteFeedItem(accessToken, feedItemId),
-    onSuccess: () => {queryClient.invalidateQueries(["feed"])},
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "done"]);
+      queryClient.invalidateQueries(["feed", "inProgress"]);
+    },
   });
 }
 
@@ -60,7 +72,9 @@ export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
       href={item.link}
       target='_blank'
       onClick={() => {
-        assignMutation.mutate(item.id);
+        if (!assignMutation.isLoading) {
+          assignMutation.mutate(item.id);
+        }
       }}>
       <i className='bi bi-binoculars me-2'></i>
       Revisar
@@ -74,6 +88,7 @@ export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
   return (
     <button
       className='card-link btn btn-secondary'
+      disabled={uncompleteMutation.isLoading}
       onClick={() => {
         uncompleteMutation.mutate(item.id)
       }}>
@@ -87,18 +102,26 @@ export function InProgressFeedItemButtons({item}: FeedItemButtonsProps) {
   const unassignMutation = useUnassignFeedItemMutation();
   const completeMutation = useCompleteFeedItemMutation();
 
+  const isMutating = completeMutation.isLoading || unassignMutation.isLoading;
+
   return (
     <>
       <button
         className='card-link btn btn-success'
+        disabled={isMutating}
         onClick={() => {
           completeMutation.mutate(item.id)
         }}>
-        <i className="bi bi-check-circle-fill me-2"></i>
+        {isMutating ? (
+          <span className="spinner-border me-2"></span>
+        ) : (
+          <i className="bi bi-check-circle-fill me-2"></i>
+        )}
         Revisado
       </button>
       <button
         className='card-link btn btn-secondary'
+        disabled={completeMutation.isLoading || unassignMutation.isLoading}
         onClick={() => {
           unassignMutation.mutate(item.id)
         }}>
@@ -149,23 +172,31 @@ export function FeedItemCard({item}: FeedItemCardProps) {
 
 type FeedListProps = {
   name: string,
-  data?: FeedItemPages
+  query: {
+    isFetching: boolean,
+    data: FeedItemPages,
+  },
 };
 
-export function FeedList({name, data}: FeedListProps) {
-  if (!data) {
-    return;
-  }
-
+export function FeedList({name, query}: FeedListProps) {
   return (
     <div className="col">
       <div className="mx-1 p-2 bg-secondary-subtle rounded">
         <h2 className='h4 my-4'>
-          {name} <small>({data.total})</small>
+          {name} 
+          { !query.isFetching && (
+            <small className='ms-1'>({query.data.total})</small>
+          )}
         </h2>
-        {data.page.map((item: FeedItem) => (
-          <FeedItemCard key={item.id} item={item} />
-        ))}
+        { query.isFetching ? (
+          <div className="text-center">
+            <span className="spinner-border"></span>
+          </div>
+        ) : (
+          query.data.page.map((item) => (
+            <FeedItemCard key={item.id} item={item} />
+          ))
+        )}
       </div>
     </div>
   )
@@ -180,9 +211,9 @@ export function Feed() {
     <>
       <div className="container mt-3">
         <div className="row row-cols-1 row-cols-md-3">
-          <FeedList name="Pendientes" data={backlogQuery.data} />
-          <FeedList name="En revisión" data={inProgressQuery.data} />
-          <FeedList name="Revisadas" data={doneQuery.data} />
+          <FeedList name="Pendientes" query={backlogQuery} />
+          <FeedList name="En revisión" query={inProgressQuery} />
+          <FeedList name="Revisadas" query={doneQuery} />
         </div>
       </div>
     </>
