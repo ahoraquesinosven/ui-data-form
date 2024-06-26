@@ -57,13 +57,13 @@ export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
   return (
     <a
       className="card-link btn btn-primary"
-      title="Revisar"
       href={item.link}
       target='_blank'
       onClick={() => {
         assignMutation.mutate(item.id);
       }}>
-      <i className='bi bi-binoculars'></i>
+      <i className='bi bi-binoculars me-2'></i>
+      Revisar
     </a>
   );
 }
@@ -73,12 +73,12 @@ export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
 
   return (
     <button
-      className='card-link btn btn-danger'
-      title='Volver a revisar'
+      className='card-link btn btn-secondary'
       onClick={() => {
         uncompleteMutation.mutate(item.id)
       }}>
-      <i className="bi bi-x-circle-fill"></i>
+      <i className="bi bi-x-circle-fill me-2"></i>
+      Volver a revisar
     </button>
   );
 }
@@ -90,20 +90,20 @@ export function InProgressFeedItemButtons({item}: FeedItemButtonsProps) {
   return (
     <>
       <button
-        className='card-link btn btn-danger'
-        title="Cancelar revisión"
-        onClick={() => {
-          unassignMutation.mutate(item.id)
-        }}>
-        <i className="bi bi-x-circle-fill"></i>
-      </button>
-      <button
         className='card-link btn btn-success'
-        title="Revisado"
         onClick={() => {
           completeMutation.mutate(item.id)
         }}>
-        <i className="bi bi-check-circle-fill"></i>
+        <i className="bi bi-check-circle-fill me-2"></i>
+        Revisado
+      </button>
+      <button
+        className='card-link btn btn-secondary'
+        onClick={() => {
+          unassignMutation.mutate(item.id)
+        }}>
+        <i className="bi bi-x-circle-fill me-2"></i>
+        Pendiente
       </button>
     </>
   );
@@ -122,24 +122,26 @@ export function FeedItemCard({item}: FeedItemCardProps) {
         </div>
       )}
       <div className="card-body">
-        <h3 className="card-title h5">
+        <h3 className="card-title h5 mb-3">
           {item.title}
         </h3>
-        <h4 className="card-subtitle h6 text-body-secondary mb-2">
+        <h4 className="card-subtitle h6 text-body-secondary mb-3">
           {new Intl.DateTimeFormat('es').format(new Date(item.publishedAt))} - {item.feed.name}
         </h4>
-        {!item.assignedUser && (
-          <BacklogFeedItemButtons item={item} />
-        )}
-        {item.assignedUser && !item.isDone && (
-          <InProgressFeedItemButtons item={item} />
-        )}
-        {item.isDone && (
-          <DoneFeedItemButtons item={item} />
-        )}
-        <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
-          <i className='bi bi-box-arrow-up-right'></i>
-        </a>
+        <div className="btn-group w-100">
+          {!item.assignedUser && (
+            <BacklogFeedItemButtons item={item} />
+          )}
+          {item.assignedUser && !item.isDone && (
+            <InProgressFeedItemButtons item={item} />
+          )}
+          {item.isDone && (
+            <DoneFeedItemButtons item={item} />
+          )}
+          <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
+            <i className='bi bi-box-arrow-up-right'></i>
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -157,12 +159,14 @@ export function FeedList({name, data}: FeedListProps) {
 
   return (
     <div className="col">
-      <h2 className='h4'>
-        {name} <span className="badge text-bg-danger rounded-pill">{data.total}</span>
-      </h2>
-      {data.page.map((item: FeedItem) => (
-        <FeedItemCard key={item.id} item={item} />
-      ))}
+      <div className="mx-1 p-2 bg-secondary-subtle rounded">
+        <h2 className='h4 my-4'>
+          {name} <small>({data.total})</small>
+        </h2>
+        {data.page.map((item: FeedItem) => (
+          <FeedItemCard key={item.id} item={item} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -174,7 +178,7 @@ export function Feed() {
 
   return (
     <>
-      <div className="container-fluid mt-3">
+      <div className="container mt-3">
         <div className="row row-cols-1 row-cols-md-3">
           <FeedList name="Pendientes" data={backlogQuery.data} />
           <FeedList name="En revisión" data={inProgressQuery.data} />
