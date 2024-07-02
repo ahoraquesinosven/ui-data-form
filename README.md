@@ -12,6 +12,12 @@ We use a dockerized development environment, so you will need [docker](https://w
 
 ### Quick start
 
+* Make sure you have a server running from https://github.com/ahoraquesinosven/api-registro-femicidios
+    * Follow the steps describe in that API README to create the env.defaults
+    * Update the .env with:`AUTH_PROVIDER_REDIRECT_URI=http://localhost:5173/oauth/cb` to make sure it is calling this UI
+    * Run `docker compose up` to run the server
+
+
 * Run `docker compose up`. This will take a bit the first time since the docker images need to be built or downloaded. Once done, the website can be accessed at http://localhost:5173.
 *
 * ## License
