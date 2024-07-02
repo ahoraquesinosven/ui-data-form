@@ -34,10 +34,18 @@ const Nav = () => {
           <ul className="navbar-nav me-auto">
             <li className="nav-item">
               <a
-                className='nav-link'
+                className='btn btn-light'
                 href="https://docs.google.com/forms/d/e/1FAIpQLSekOpLfYzPmzFMoPWwpfQw7VlMHBrraXwvAZyxNswl6ls2VJg/viewform"
                 target='_blank'>
-                Casos
+                Cargar un caso nuevo
+              </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className='btn btn-light ms-2'
+                href="https://docs.google.com/spreadsheets/d/1X7qtXEYP99IGLu9Wtq4ZaJAgP-Jq6ANhseAb_7kfhBg/edit?gid=918511545#gid=918511545"
+                target='_blank'>
+                Consultar casos
               </a>
             </li>
           </ul>
