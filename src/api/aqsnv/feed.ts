@@ -6,6 +6,7 @@ const endpoints = {
   feedItems: () => new URL("/v1/feed/items", config.api.aqsnv.server),
   feedItemAssignment: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/assignment`, config.api.aqsnv.server),
   feedItemCompletion: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/completion`, config.api.aqsnv.server),
+  feedItemIrrelevant: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/irrelevant`, config.api.aqsnv.server),
 };
 
 export type FeedItem = {
@@ -97,3 +98,13 @@ export async function uncompleteFeedItem(token: AccessToken, feedItemId: number)
   return;
 }
 
+export async function markIrrelevantFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
+  await httpRequest(endpoints.feedItemIrrelevant(feedItemId), {
+    method: 'post',
+    headers: {
+      "Authorization": token.asAuthorizationHeader(),
+    },
+  });
+
+  return;
+}

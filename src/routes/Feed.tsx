@@ -5,7 +5,7 @@ import {BlockLoader} from '@/components/Loading';
 import {MutatingButton} from '@/components/MutatingButton';
 import {Icon} from '@/components/Icon';
 import {useAccessToken} from '@/hooks/auth';
-import {FeedItem, FeedItemState, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem} from '@/api/aqsnv/feed';
+import {FeedItem, FeedItemState, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem, markIrrelevantFeedItem} from '@/api/aqsnv/feed';
 
 function useAssignFeedItemMutation() {
   const accessToken = useAccessToken();
@@ -64,26 +64,45 @@ function useFeedQuery(state: FeedItemState) {
   });
 }
 
+function useMarkIrrelevantFeedItemMutation() {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (feedItemId: number) => markIrrelevantFeedItem(accessToken, feedItemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "done"]);
+    },
+  });
+}
+
 type FeedItemButtonsProps = {
   item: FeedItem,
 }
 
 export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
   const assignMutation = useAssignFeedItemMutation();
+  const markIrrelevantMutation = useMarkIrrelevantFeedItemMutation();
+
+  const isMutating = assignMutation.isLoading || markIrrelevantMutation.isLoading;
 
   return (
-    <a
-      className="card-link btn btn-primary"
-      href={item.link}
-      target='_blank'
-      onClick={() => {
-        if (!assignMutation.isLoading) {
-          assignMutation.mutate(item.id);
-        }
-      }}>
+    <>
+    <MutatingButton
+      className='btn btn-primary'
+      disabled={isMutating}
+      onClick={() => {assignMutation.mutate(item.id)}}>
       <Icon icon="binoculars" />
       Revisar
-    </a>
+    </MutatingButton>
+    <MutatingButton
+      className='btn btn-danger'
+      disabled={isMutating}
+      onClick={() => {markIrrelevantMutation.mutate(item.id)}}>
+      <Icon icon="x-square" />
+      Irrelevante
+    </MutatingButton>
+    </>
   );
 }
 
