@@ -5,7 +5,7 @@ import {BlockLoader} from '@/components/Loading';
 import {MutatingButton} from '@/components/MutatingButton';
 import {Icon} from '@/components/Icon';
 import {useAccessToken} from '@/hooks/auth';
-import {FeedItem, FeedItemState, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem, markIrrelevantFeedItem} from '@/api/aqsnv/feed';
+import {FeedItem, FeedItemState, fetchFeedItems, assignFeedItem, unassignFeedItem, completeFeedItem, uncompleteFeedItem, markIrrelevantFeedItem, unmarkIrrelevantFeedItem} from '@/api/aqsnv/feed';
 
 function useAssignFeedItemMutation() {
   const accessToken = useAccessToken();
@@ -69,6 +69,18 @@ function useMarkIrrelevantFeedItemMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (feedItemId: number) => markIrrelevantFeedItem(accessToken, feedItemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed", "backlog"]);
+      queryClient.invalidateQueries(["feed", "done"]);
+    },
+  });
+}
+
+function useunMarkIrrelevantFeedItemMutation() {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (feedItemId: number) => unmarkIrrelevantFeedItem(accessToken, feedItemId),
     onSuccess: () => {
       queryClient.invalidateQueries(["feed", "backlog"]);
       queryClient.invalidateQueries(["feed", "done"]);
@@ -146,6 +158,20 @@ export function DoneFeedItemButtons({item}: FeedItemButtonsProps) {
   );
 }
 
+export function IrrelevantDoneFeedItemButtons({item}: FeedItemButtonsProps) {
+  const unmarkIrrelevantMutation = useunMarkIrrelevantFeedItemMutation();
+
+  return (
+    <MutatingButton
+      className='btn btn-secondary'
+      disabled={unmarkIrrelevantMutation.isLoading}
+      onClick={() => {unmarkIrrelevantMutation.mutate(item.id)}}>
+      <Icon icon="x-circle-fill" />
+      Volver a pendiente
+    </MutatingButton>
+  );
+}
+
 type FeedItemCardProps = {
   item: FeedItem,
 };
@@ -171,9 +197,12 @@ export function FeedItemCard({item}: FeedItemCardProps) {
           )}
           {item.assignedUser && !item.isDone && (
             <InProgressFeedItemButtons item={item} />
-          )}
-          {item.isDone && (
+          )} 
+          {item.isDone && !item.isIrrelevant && (
             <DoneFeedItemButtons item={item} />
+          )}
+          {item.isDone && item.isIrrelevant && (
+            <IrrelevantDoneFeedItemButtons item={item} />
           )}
           <a className="card-link btn btn-outline-secondary" href={item.link} target='_blank' title="Ver artículo">
             <Icon icon="box-arrow-up-right" />

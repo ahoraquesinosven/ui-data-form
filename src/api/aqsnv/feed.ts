@@ -20,6 +20,7 @@ export type FeedItem = {
   title: string,
   link: string,
   isDone: boolean,
+  isIrrelevant: boolean,
   assignedUser?: {
     name: string,
     email: string,
@@ -101,6 +102,17 @@ export async function uncompleteFeedItem(token: AccessToken, feedItemId: number)
 export async function markIrrelevantFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
   await httpRequest(endpoints.feedItemIrrelevant(feedItemId), {
     method: 'post',
+    headers: {
+      "Authorization": token.asAuthorizationHeader(),
+    },
+  });
+
+  return;
+}
+
+export async function unmarkIrrelevantFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
+  await httpRequest(endpoints.feedItemIrrelevant(feedItemId), {
+    method: 'delete',
     headers: {
       "Authorization": token.asAuthorizationHeader(),
     },
