@@ -100,13 +100,18 @@ export function BacklogFeedItemButtons({item}: FeedItemButtonsProps) {
 
   return (
     <>
-    <MutatingButton
-      className='btn btn-primary'
-      disabled={isMutating}
-      onClick={() => {assignMutation.mutate(item.id)}}>
+    <a
+      className="card-link btn btn-primary"
+      href={item.link}
+      target='_blank'
+      onClick={() => {
+        if (!assignMutation.isLoading) {
+          assignMutation.mutate(item.id);
+        }
+      }}>
       <Icon icon="binoculars" />
       Revisar
-    </MutatingButton>
+    </a>
     <MutatingButton
       className='btn btn-danger'
       disabled={isMutating}
