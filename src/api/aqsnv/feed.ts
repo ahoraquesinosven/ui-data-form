@@ -6,6 +6,7 @@ const endpoints = {
   feedItems: () => new URL("/v1/feed/items", config.api.aqsnv.server),
   feedItemAssignment: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/assignment`, config.api.aqsnv.server),
   feedItemCompletion: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/completion`, config.api.aqsnv.server),
+  feedItemIrrelevant: (feedItemId: number) => new URL(`/v1/feed/items/${feedItemId}/irrelevant`, config.api.aqsnv.server),
 };
 
 export type FeedItem = {
@@ -19,6 +20,7 @@ export type FeedItem = {
   title: string,
   link: string,
   isDone: boolean,
+  isIrrelevant: boolean,
   assignedUser?: {
     name: string,
     email: string,
@@ -97,3 +99,24 @@ export async function uncompleteFeedItem(token: AccessToken, feedItemId: number)
   return;
 }
 
+export async function markIrrelevantFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
+  await httpRequest(endpoints.feedItemIrrelevant(feedItemId), {
+    method: 'post',
+    headers: {
+      "Authorization": token.asAuthorizationHeader(),
+    },
+  });
+
+  return;
+}
+
+export async function unmarkIrrelevantFeedItem(token: AccessToken, feedItemId: number): Promise<void> {
+  await httpRequest(endpoints.feedItemIrrelevant(feedItemId), {
+    method: 'delete',
+    headers: {
+      "Authorization": token.asAuthorizationHeader(),
+    },
+  });
+
+  return;
+}
