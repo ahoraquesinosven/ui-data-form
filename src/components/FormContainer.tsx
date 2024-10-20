@@ -5,6 +5,9 @@ import VictimForm from "./VictimForm";
 import AggressorForm from "./AggressorForm";
 import CaseForm from "./CaseForm";
 import { Button } from '@mui/material';
+import {httpRequest} from "@/utils/http";
+import {AccessToken} from "@/types/auth";
+import {useAccessToken} from '@/hooks/auth';
 
 const FormContainer = () => {
     const [victimFormValues, setVictimFormValues] = useState({});
@@ -35,20 +38,40 @@ const FormContainer = () => {
           });
     }
 
+    const accessToken = useAccessToken();
+    console.log("Si, el token acces es: ", accessToken);
 
-    const handleSubmit = (e : any) =>{
+    const handleSubmit = async (e: any) => {
+
       e.preventDefault();
-    }
+
+      const payload = {victim: victimFormValues, aggresor: aggressorFormValues, case: caseFormValues };
+          try {
+            const response = await fetch('http://localhost:8080/v1/case', {
+                mode: "cors",
+                method: "post",
+                body: JSON.stringify(payload),
+                headers: {
+                    'Authorization' : accessToken.asAuthorizationHeader(),
+                    "Content-Type": "application/json",
+                }
+            });
+            console.log('Success:', response.data);
+          } catch (error) {
+            console.error('Error:', error);
+          }
+    };
+    
 
   return (
     <Container maxWidth="md">
       <form onSubmit={handleSubmit}>
         <Grid container spacing={4} direction="column" alignItems="stretch">
           <Grid item>
-            <VictimForm formValues={victimFormValues} handleInputChange={setVictimFormValues}/>
+            <VictimForm formValues={victimFormValues} handleInputChange={handleVictimForm}/>
           </Grid>
           <Grid item>
-            <AggressorForm formValues={aggressorFormValues} handleInputChange={setAggressorFormValues}/>
+            <AggressorForm formValues={aggressorFormValues} handleInputChange={handleAggressorForm}/>
           </Grid>
           <Grid item>
             <CaseForm formValues={caseFormValues} handleInputChange={handleCaseForm}/>
